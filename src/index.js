@@ -2,8 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 function Square(props) {
+    const highlight = props.highlight?{backgroundColor:'yellow'}:{};
     return (
-        <button className="square" onClick={props.onClick}>
+        <button className="square" onClick={props.onClick} style={highlight}>
             {props.value}
         </button>
     );
@@ -11,35 +12,32 @@ function Square(props) {
 
 class Board extends React.Component {
     renderSquare(i) {
+        // console.log('renderSquare:' + this.props.winner?.find(a => a === i));
         return (
             <Square
                 value={this.props.squares[i]}
+                highlight={this.props.winner?.find(a => a === i) !== undefined}
                 onClick={() => this.props.onClick(i)}
             />
         );
     }
 
     render() {
+      
+        let count = Array.from(Array(this.props.columnCount), (_,x) => x);
+
         return (
             <div>
-                for (let index = 0; index < this.props.columnCount: number; index++) {
-                    const element = array[index];
+                {
+                  count.map((_, idx) => {
+                    return (
+                    <div className="board-row">
+                      {count.map((_, idx2) => this.renderSquare(idx * 3 + idx2))}
+                    </div>)
+                    ;
+                  }
+                  )
                 }
-                <div className="board-row">
-                    {this.renderSquare(0)}
-                    {this.renderSquare(1)}
-                    {this.renderSquare(2)}
-                </div>
-                <div className="board-row">
-                    {this.renderSquare(3)}
-                    {this.renderSquare(4)}
-                    {this.renderSquare(5)}
-                </div>
-                <div className="board-row">
-                    {this.renderSquare(6)}
-                    {this.renderSquare(7)}
-                    {this.renderSquare(8)}
-                </div>
             </div>
         );
     }
@@ -51,12 +49,13 @@ class Game extends React.Component {
         this.state = {
             history: [
                 {
-                    squares: Array(9).fill(null)
+                    squares: Array(9).fill(null),
+                    index: -1
                 }
             ],
             stepNumber: 0,
             xIsNext: true,
-            : 3,
+            currentIndex: 0
         };
     }
 
@@ -71,11 +70,12 @@ class Game extends React.Component {
         this.setState({
             history: history.concat([
                 {
-                    squares: squares
+                    squares: squares,
+                    index: i
                 }
             ]),
             stepNumber: history.length,
-            xIsNext: !this.state.xIsNext
+            xIsNext: !this.state.xIsNext,
         });
     }
 
@@ -93,8 +93,9 @@ class Game extends React.Component {
         const columnCount = 3;
 
         const moves = history.map((step, move) => {
+            const msg = 'Go to move #' + move + '(' + Math.floor(step.index / 3) + '/' + step.index % 3 + ')';
             const desc = move ?
-                'Go to move #' + move :
+                (move === this.state.stepNumber ? <b>{msg}</b>: msg):
                 'Go to game start';
             return (
                 <li key={move}>
@@ -105,9 +106,13 @@ class Game extends React.Component {
 
         let status;
         if (winner) {
-            status = "Winner: " + winner;
+            status = "Winner: " + winner.winner;
         } else {
+          if(this.state.stepNumber === columnCount * columnCount){
+            status = "PINGLE XIAO PENG YOU";
+          } else {
             status = "Next player: " + (this.state.xIsNext ? "X" : "O");
+          }
         }
 
         return (
@@ -115,7 +120,8 @@ class Game extends React.Component {
                 <div className="game-board">
                     <Board
                         squares={current.squares}
-                        columnCount={this.state.columnCount}
+                        columnCount={columnCount}
+                        winner={winner?.line}
                         onClick={i => this.handleClick(i)}
                     />
                 </div>
@@ -147,7 +153,8 @@ function calculateWinner(squares) {
     for (let i = 0; i < lines.length; i++) {
         const [a, b, c] = lines[i];
         if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-            return squares[a];
+          console.log(JSON.stringify({"winner":squares[a], ...lines[i]}));
+            return {"winner":squares[a], "line":lines[i]};
         }
     }
     return null;
