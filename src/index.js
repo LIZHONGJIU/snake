@@ -5,6 +5,8 @@ const CTYPE = {
     BLANK: 'B',
     WALL: 'W',
     SNAKE: 'S',
+    SNAKE_HEADER: 'SH',
+    SNAKE_PREGNANT: 'SP',
     FUCKED_SNAKE: 'FS',
     FOOD_PLUS: 'FP',
     FOOD_MINUS: 'FM',
@@ -21,8 +23,9 @@ const FOOD_LIST= [
     CTYPE.FOOD_S_DOWN
 ];
 
+// const FOOD_LIST1 = [CTYPE.FOOD_ERASER, CTYPE.FOOD_ERASER, CTYPE.FOOD_ERASER];
 const FOOD_LIST1 = [CTYPE.FOOD_PLUS, CTYPE.FOOD_PLUS, CTYPE.FOOD_PLUS, CTYPE.FOOD_S_UP];
-const FOOD_LIST2 = [CTYPE.FOOD_PLUS, CTYPE.FOOD_MINUS, CTYPE.FOOD_ERASER, CTYPE.FOOD_S_UP, CTYPE.FOOD_S_DOWN];
+const FOOD_LIST2 = [CTYPE.FOOD_PLUS, CTYPE.FOOD_ERASER, CTYPE.FOOD_S_UP, CTYPE.FOOD_S_DOWN];
 const FOOD_LIST3 = [CTYPE.FOOD_MINUS, CTYPE.FOOD_ERASER, CTYPE.FOOD_S_UP, CTYPE.FOOD_S_DOWN];
 
 const DIRECTION = {
@@ -37,9 +40,9 @@ const STATUS = {
 }
 
 const COLUMN_COUNT = 35;
-const FOOD_COUNT = 5;
+const FOOD_COUNT = 5;   
 const SPEED = 200;
-const SNAKE_MAX_LENGTH = 15; //SNAKE MAX LENGTH,
+const SNAKE_MAX_LENGTH = 20; //SNAKE MAX LENGTH,
 const SNAKE_MIN_LENGTH = 5; //SNAKE MIN LENGTH
 const FOOD_MAX_COUNT = 15;
 const FOOD_MIN_COUNT = 3;
@@ -48,6 +51,7 @@ const DEFAULT_STATE = {
     snake: [{x:3,y:0,t:CTYPE.SNAKE}, {x:2,y:0,t:CTYPE.SNAKE}, {x:1,y:0,t:CTYPE.SNAKE}, {x:0,y:0,t:CTYPE.SNAKE}],
     // others: [{x:2,y:7,t:CTYPE.FOOD_PLUS},{x:5,y:7,t:CTYPE.FOOD_PLUS},{x:7,y:3,t:CTYPE.FOOD_MINUS}],
     others: [],
+    flash: [],
     direction: DIRECTION.RIGHT,
     started: false,
     status: STATUS.RUNNING,
@@ -55,6 +59,7 @@ const DEFAULT_STATE = {
     speed: SPEED,
     lastFood: '',
     score: 0,
+    directionPool: [DIRECTION.RIGHT],
 }
 /**
  * 
@@ -68,7 +73,9 @@ function Square(props) {
     let text = '';
     let textColor = '';
     switch (props.type) {
-        case CTYPE.SNAKE: color = 'black';break;
+        case CTYPE.SNAKE: color = '#525252';break;
+        case CTYPE.SNAKE_HEADER: color = 'black';textColor = 'white';text = 'H';break;
+        case CTYPE.SNAKE_PREGNANT: color = 'black';break;
         case CTYPE.FUCKED_SNAKE: color = 'red';break;
         case CTYPE.WALL: color = 'blue';break;
         case CTYPE.FOOD_PLUS: color = 'yellow'; text = '+'; break;
@@ -79,7 +86,10 @@ function Square(props) {
         default:
             break;
         }
-    const style = color?{backgroundColor:color}:{};
+    let style = color?{backgroundColor:color,opacity:1}:{};
+    if(props.flash){
+        style = {backgroundColor:'blue',opacity:0.5}
+    }
     const style2 = textColor? {color:textColor}: {};
     // console.log(`Square ${JSON.stringify(style)}`);
     return (
@@ -92,13 +102,31 @@ function Square(props) {
 class Board extends React.Component {
     renderSquare(x, y) {
         let type = CTYPE.BLANK;
+        let flash = false;
+
         type = this.props.others?.find(a => a.x === x && a.y === y)?.t ?? CTYPE.BLANK;
         // console.log(`renderSquare ${type} - ${JSON.stringify(this.props.food?.find(a => a.x === x && a.y === y)?.t)}`)
         type = this.props.snake?.find(a => a.x === x && a.y === y)?.t ?? type;
+
+        if(type === CTYPE.SNAKE){
+            if(this.props.snake.length === SNAKE_MAX_LENGTH - 1){
+                type = CTYPE.SNAKE_PREGNANT;
+            }
+            if(this.props.snake[0].x === x && this.props.snake[0].y === y){
+                type = CTYPE.SNAKE_HEADER;
+            }
+        }
+
+        if(this.props.flash 
+            && x >= this.props.flash.x1 && x <= this.props.flash.x2
+            && y >= this.props.flash.y1 && y <= this.props.flash.y2){
+                flash = true;
+        }
         return (
             <Square
                 key={x * COLUMN_COUNT + y}
                 type={type}
+                flash={flash}
             />
         );
     }
@@ -127,7 +155,7 @@ class Board extends React.Component {
 class Game extends React.Component {
     constructor(props) {
         super(props);
-        const history = '';
+        const history = [{},{}];
         this.state = {
             ...DEFAULT_STATE
             // snake: [{x:3,y:0,t:CTYPE.SNAKE}, {x:2,y:0,t:CTYPE.SNAKE}, {x:1,y:0,t:CTYPE.SNAKE}, {x:0,y:0,t:CTYPE.SNAKE}],
@@ -164,30 +192,28 @@ class Game extends React.Component {
 
     keydown = (event) => {
         // console.log(event.key);
-        let timerId;
-        if(!timerId && this.state.status !== STATUS.FUCKED){
-            timerId = setTimeout(() => {
-                
-                console.log(event.key);
-                timerId = null;
-                // if(this.state.status === STATUS.FUCKED){return;}
-                let dir = '';
-                switch (event.key) {
-                    case 'ArrowUp': if(this.state.direction ===DIRECTION.LEFT || this.state.direction ===DIRECTION.RIGHT) {dir = DIRECTION.UP;} break;
-                    case 'ArrowDown': if(this.state.direction ===DIRECTION.LEFT || this.state.direction ===DIRECTION.RIGHT) {dir = DIRECTION.DOWN;} break;
-                    case 'ArrowLeft': if(this.state.direction ===DIRECTION.UP || this.state.direction ===DIRECTION.DOWN) {dir = DIRECTION.LEFT;} break;
-                    case 'ArrowRight': if(this.state.direction ===DIRECTION.UP || this.state.direction ===DIRECTION.DOWN) {dir = DIRECTION.RIGHT;} break;
-                    case 'Escape': this.swich(); return;
-                    case 'Enter': this.swich(); return;
-                    default:
-                        break;
-                }
-                if(dir){
-                    this.setState(() => {
-                        return { direction: dir }
-                    })
-                }
-            }, 100);
+        
+        if(this.state.status === STATUS.FUCKED) {return;}
+        let dir = '';
+        switch (event.key) {
+            case 'ArrowUp': if(this.state.direction ===DIRECTION.LEFT || this.state.direction ===DIRECTION.RIGHT) {dir = DIRECTION.UP;} break;
+            case 'ArrowDown': if(this.state.direction ===DIRECTION.LEFT || this.state.direction ===DIRECTION.RIGHT) {dir = DIRECTION.DOWN;} break;
+            case 'ArrowLeft': if(this.state.direction ===DIRECTION.UP || this.state.direction ===DIRECTION.DOWN) {dir = DIRECTION.LEFT;} break;
+            case 'ArrowRight': if(this.state.direction ===DIRECTION.UP || this.state.direction ===DIRECTION.DOWN) {dir = DIRECTION.RIGHT;} break;
+            case 'Escape': this.swich(); return;
+            case 'Enter': this.swich(); return;
+            default:
+                break;
+        }
+        if(dir && this.state.directionPool.length < 2){
+            if(!(((dir ===DIRECTION.LEFT || dir ===DIRECTION.RIGHT)
+            && (this.state.directionPool[0] ===DIRECTION.LEFT || this.state.directionPool[0] ===DIRECTION.RIGHT))
+            || ((dir ===DIRECTION.UP || dir ===DIRECTION.DOWN)
+            && (this.state.directionPool[0] ===DIRECTION.UP || this.state.directionPool[0] ===DIRECTION.DOWN)))){
+                this.setState(() => {
+                    return { directionPool: [...this.state.directionPool, dir] }
+                })
+            }
         }
     };
 
@@ -228,6 +254,7 @@ class Game extends React.Component {
     // checkFood = (p) => FOOD_LIST.includes(p) ;
 
     swich(){
+        console.log(`this.state.status: ${this.state.status}, this.state.started: ${this.state.started}`);
         if(this.state.status === STATUS.RUNNING){
             if(this.state.started){
                 this.stopGame();
@@ -265,9 +292,15 @@ class Game extends React.Component {
 
     move = () => {
         let newItem =  {};
+        let directionPool = this.state.directionPool;
+        let direction = this.state.direction;
+        if(directionPool && directionPool.length > 0){
+            direction = this.state.directionPool[0];
+            directionPool = directionPool.slice(1);
+        }
         Object.assign(newItem, this.state.snake[0]);
         // console.log(`${Math.floor(Math.random() * COLUMN_COUNT)}`);
-        switch (this.state.direction) {
+        switch (direction) {
             case DIRECTION.UP:
                 newItem.y = newItem.y === 0?COLUMN_COUNT - 1:newItem.y - 1;
                 break;
@@ -283,29 +316,39 @@ class Game extends React.Component {
             default:
                 break;
         }
-        this.history = {...this.state};
+        this.history = this.history?[this.history[1], {...this.state}]:[{...this.state}];
         let target = this.getSquare(newItem);
         // console.log(`move2 ${this.state.direction} - ${JSON.stringify(newItem)} - ${target.t}`);
         if(target) {
             switch (target.t) {
                 case CTYPE.BLANK:
-                    this.setState( () => {
-                        return {snake: Array.of(newItem, ...this.state.snake.slice(0, this.state.snake.length - 1))}
-                    })
+                    this.moveOne(newItem, direction, directionPool);
+                    // this.setState( () => {
+                    //     return {
+                    //         snake: Array.of(newItem, ...this.state.snake.slice(0, this.state.snake.length - 1)),
+                    //         direction: direction,
+                    //         directionPool: directionPool
+                    //     }
+                    // })
                     // this.setState({
                     //     snake: Array.of(newItem, ...this.state.snake.slice(0, this.state.snake.length - 1))
                     // })
                     break;
                 case CTYPE.WALL:
                 case CTYPE.SNAKE:
-                    this.fucked();
+                    if(this.state.snake[this.state.snake.length - 1].x === newItem.x 
+                    && this.state.snake[this.state.snake.length - 1].y === newItem.y ){
+                        this.moveOne(newItem, direction, directionPool);
+                    } else {
+                        this.fucked(direction, directionPool);
+                    }
                     break;
                 case CTYPE.FOOD_PLUS:
                 case CTYPE.FOOD_MINUS:
                 case CTYPE.FOOD_ERASER:
                 case CTYPE.FOOD_S_DOWN:
                 case CTYPE.FOOD_S_UP:
-                    this.mixi(target.t, newItem);
+                    this.mixi(target.t, newItem, direction, directionPool);
                     break;
                 
                 default:
@@ -314,7 +357,17 @@ class Game extends React.Component {
         }
     }
 
-    mixi(type, newItem){
+    moveOne(newItem, direction, directionPool){
+        this.setState( () => {
+            return {
+                snake: Array.of(newItem, ...this.state.snake.slice(0, this.state.snake.length - 1)),
+                direction: direction,
+                directionPool: directionPool
+            }
+        })
+    }
+
+    mixi(type, newItem, direction, directionPool){
 
         let others;
         let snake;
@@ -339,11 +392,11 @@ class Game extends React.Component {
                     break;
                 
                 case CTYPE.FOOD_S_DOWN:
-                    speed += 50;
+                    speed += speed<100?20:speed<350?50:0;
                     break;
 
                 case CTYPE.FOOD_S_UP:
-                    speed -= 50;
+                    speed -= speed>100?50:(speed>50?10:0);
                     break;
 
                 default:
@@ -362,17 +415,16 @@ class Game extends React.Component {
             others = [...others2.filter( a => !(a.x === newItem.x && a.y === newItem.y)).slice()];
             snake = Array.of(newItem, ...this.state.snake.slice());
         }
-        this.setState( () => {
-            
-            return {
+        this.setState({
                 others: others,
                 snake: snake,
                 lastFood: lastFood,
                 foodCount: foodCount,
                 score: this.state.score + score,
                 speed: speed,
-            }
-        }, this.resetSpeed())
+                direction: direction,
+                directionPool: directionPool
+        }, this.resetSpeed)
     }
     //5 * 7라고 하면 ...
     erase(newItem){
@@ -405,18 +457,43 @@ class Game extends React.Component {
             default:
                 break;
         }
+        const flash = {x1, x2, y1, y2};
+        this.flashCount = 0;
+        this.flashtimer = setInterval(() => {
+            console.log(`flashtimer: ${JSON.stringify(flash)}`)
+            if(this.flashCount > 3){
+                this.flashCount = 0;
+                clearInterval(this.flashtimer);
+            } else {
+                if (this.flashCount % 2 === 0) {
+                    this.setState({
+                        flash:flash
+                    })
+                } else {
+                    this.setState({
+                        flash:{}
+                    })
+                }
+                this.flashCount++;
+            }
+        }, 10);
         return this.state.others.filter( a => !(a.x >= x1 && a.x <= x2 && a.y >= y1 && a.y <= y2 && a.t === CTYPE.WALL)).slice();
+        // return {'others':others, 'flash':flash};
     }
 
-    fucked(){
-        let data = [...this.state.snake.map(s => {return {'x':s.x,'y':s.y,t:CTYPE.FUCKED_SNAKE}}).slice()];
-        console.log(JSON.stringify(data));
+
+
+    fucked(direction, directionPool){
+        // let data = [...this.state.snake.map(s => {return {'x':s.x,'y':s.y,t:CTYPE.FUCKED_SNAKE}}).slice()];
+        // console.log(JSON.stringify(data));
         clearInterval(this.moveTimer);
         clearInterval(this.foodTimer);
         this.setState({
             snake: [...this.state.snake.map(s => {return {'x':s.x,'y':s.y,t:CTYPE.FUCKED_SNAKE}}).slice()],
             started: false,
-            status: STATUS.FUCKED
+            status: STATUS.FUCKED,
+            direction: direction,
+            directionPool: directionPool
         });
     }
     reset(){
@@ -424,8 +501,10 @@ class Game extends React.Component {
     }
 
     resetToHistory(){
-        this.setState({...this.history});
-        // console.log(JSON.stringify(this.history));
+        if(this.history){
+            this.setState({...this.history[0]});
+        }
+        console.log(JSON.stringify(this.history));
     }
 
     render() {
@@ -453,6 +532,7 @@ class Game extends React.Component {
                     <Board
                         others={this.state.others}
                         snake={this.state.snake}
+                        flash={this.state.flash}
                     />
                 </div>
                 <div className="game-info">
@@ -462,6 +542,7 @@ class Game extends React.Component {
                      FOOD COUNT:  <span className='label-highlight'>{this.state.foodCount}</span>,
                      SPEED:  <span className='label-highlight'>{this.state.speed}</span>,
                      SCORE: <span className='label-highlight'>{this.state.score}</span>
+                     {/* dirPool: <span className='label-highlight'>{JSON.stringify(this.state.directionPool)}</span> */}
                     <button className='game-info2' onClick={this.resumeGame.bind(this)} > start </button> 
                     <button className='game-info2' onClick={this.reset.bind(this)} > reset </button>
                     <button className='game-info2' onClick={this.resetToHistory.bind(this)} > history </button>
