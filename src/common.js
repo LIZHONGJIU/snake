@@ -1,0 +1,82 @@
+
+const CTYPE = {
+    BLANK: 'B',
+    WALL: 'W',
+    SNAKE: 'S',
+    SNAKE_HEADER: 'SH',
+    SNAKE_PREGNANT: 'SP',
+    FUCKED_SNAKE: 'FS',
+    FOOD_PLUS: 'FP',
+    FOOD_MINUS: 'FM',
+    FOOD_ERASER: 'FE',
+    FOOD_S_UP: 'FSU',
+    FOOD_S_DOWN: 'FSD'
+}
+
+const FOOD_LIST= [
+    CTYPE.FOOD_PLUS, 
+    CTYPE.FOOD_MINUS, 
+    CTYPE.FOOD_ERASER, 
+    CTYPE.FOOD_S_UP, 
+    CTYPE.FOOD_S_DOWN
+];
+
+// const FOOD_LIST1 = [CTYPE.FOOD_ERASER, CTYPE.FOOD_ERASER, CTYPE.FOOD_ERASER];
+const FOOD_LIST1 = [CTYPE.FOOD_PLUS, CTYPE.FOOD_PLUS, CTYPE.FOOD_PLUS, CTYPE.FOOD_S_UP];
+const FOOD_LIST2 = [CTYPE.FOOD_PLUS, CTYPE.FOOD_ERASER, CTYPE.FOOD_S_UP, CTYPE.FOOD_S_DOWN];
+const FOOD_LIST3 = [CTYPE.FOOD_MINUS, CTYPE.FOOD_ERASER, CTYPE.FOOD_S_UP, CTYPE.FOOD_S_DOWN];
+
+const DIRECTION = {
+    UP: 'U',
+    DOWN: 'D',
+    LEFT: 'L',
+    RIGHT: 'R'
+}
+const STATUS = {
+    FUCKED: 'F',
+    RUNNING: 'R'
+}
+
+const COLUMN_COUNT = 35;
+const FOOD_COUNT = 5;   
+const SPEED = 200;
+const SNAKE_MAX_LENGTH = 20; //SNAKE MAX LENGTH,
+const SNAKE_MIN_LENGTH = 5; //SNAKE MIN LENGTH
+const FOOD_MAX_COUNT = 15;
+const FOOD_MIN_COUNT = 3;
+
+const DEFAULT_STATE = {
+    snake: [{x:3,y:0,t:CTYPE.SNAKE}, {x:2,y:0,t:CTYPE.SNAKE}, {x:1,y:0,t:CTYPE.SNAKE}, {x:0,y:0,t:CTYPE.SNAKE}],
+    // others: [{x:2,y:7,t:CTYPE.FOOD_PLUS},{x:5,y:7,t:CTYPE.FOOD_PLUS},{x:7,y:3,t:CTYPE.FOOD_MINUS}],
+    others: [],
+    flash: [],
+    direction: DIRECTION.RIGHT,
+    started: false,
+    status: STATUS.RUNNING,
+    foodCount: FOOD_COUNT,
+    speed: SPEED,
+    lastFood: '',
+    score: 0,
+    directionPool: [DIRECTION.RIGHT],
+}
+
+const CONSTANT = {
+    DEFAULT_STATE: DEFAULT_STATE,
+    FOOD_COUNT: FOOD_COUNT,
+    SNAKE_MIN_LENGTH: SNAKE_MIN_LENGTH,
+    FOOD_MAX_COUNT: FOOD_MAX_COUNT,
+    FOOD_MIN_COUNT: FOOD_MIN_COUNT,
+    CTYPE: CTYPE,
+    SNAKE_MAX_LENGTH: SNAKE_MAX_LENGTH,
+    FOOD_LIST: FOOD_LIST,
+    FOOD_LIST1: FOOD_LIST1,
+    FOOD_LIST2: FOOD_LIST2,
+    FOOD_LIST3: FOOD_LIST3,
+    DIRECTION: DIRECTION,
+    STATUS: STATUS,
+    SPEED: SPEED,
+    COLUMN_COUNT:COLUMN_COUNT
+}
+
+export default Object.assign( {}, CONSTANT)
+//  default const a = {} 
