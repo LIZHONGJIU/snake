@@ -58,6 +58,7 @@ const DEFAULT_STATE = {
     lastFood: '',
     score: 0,
     directionPool: [DIRECTION.RIGHT],
+    columnCount: COLUMN_COUNT
 }
 
 const CONSTANT = {

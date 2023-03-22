@@ -8,8 +8,6 @@ import './index.css';
 
 class Game extends React.Component {
     constructor(props) {
-        console.log(JSON.stringify(common.DEFAULT_STATE));
-        console.log(JSON.stringify(common.CTYPE));
         super(props);
         const history = [{},{}];
         this.state = {
@@ -18,8 +16,6 @@ class Game extends React.Component {
     }
 
     componentDidMount() {
-        // this.resumeGame();
-        
         window.addEventListener('keydown', this.keydown.bind(this));
     }
     
@@ -39,8 +35,6 @@ class Game extends React.Component {
     }
 
     keydown = (event) => {
-        // console.log(event.key);
-        
         if(this.state.status === common.STATUS.FUCKED) {return;}
         let dir = '';
         switch (event.key) {
@@ -69,16 +63,13 @@ class Game extends React.Component {
     //add food randomly, TODO: if there's few BLANK, it'll take more time, may be need to change logic 
     createFood() {
         let foods = this.state.others.filter(s => common.FOOD_LIST.includes(s.t));
-        // console.log(`createFood foods.length: ${foods.length}, this.state.others: ${JSON.stringify(this.state.others)}`);
         if(foods.length < this.state.foodCount){
             let data;
             while (!data || data.t !== common.CTYPE.BLANK) {
-                data = this.getSquare({'x':Math.floor(Math.random() * common.COLUMN_COUNT), 'y':Math.floor(Math.random() * common.COLUMN_COUNT)});
+                data = this.getSquare({'x':Math.floor(Math.random() * this.state.columnCount), 'y':Math.floor(Math.random() * this.state.columnCount)});
             }
             data.t = this.getFoodType();
             this.setState( () => {
-                // let data = this.state.others.filter( a => !(a.x === newItem.x && a.y === newItem.y)).slice();
-                // console.log(JSON.stringify(data));
                 return {
                     others: Array.of(data, ...this.state.others.slice())
                 }
@@ -113,16 +104,10 @@ class Game extends React.Component {
             }
         })
 
-        // console.log(`getFoodTypex: ${JSON.stringify(foodList2)}`);
-
         return foodList2[Math.floor(Math.random() * foodList2.length)];
-        // return foodList[Math.floor(Math.random() * foodList.length)];
     }
 
-    // checkFood = (p) => common.FOOD_LIST.includes(p) ;
-
     swich(){
-        console.log(`this.state.status: ${this.state.status}, this.state.started: ${this.state.started}`);
         if(this.state.status === common.STATUS.RUNNING){
             if(this.state.started){
                 this.stopGame();
@@ -147,7 +132,6 @@ class Game extends React.Component {
     }
 
     stopGame() {
-        console.log(`stopGame: ${this.state.started} - ${this.state.status} - ${this.moveTimer}`);
         if(this.state.started && this.state.status === common.STATUS.RUNNING){
             clearInterval(this.moveTimer);
             clearInterval(this.foodTimer);
@@ -167,19 +151,19 @@ class Game extends React.Component {
             directionPool = directionPool.slice(1);
         }
         Object.assign(newItem, this.state.snake[0]);
-        // console.log(`${Math.floor(Math.random() * common.COLUMN_COUNT)}`);
+        // console.log(`${Math.floor(Math.random() * this.state.columnCount)}`);
         switch (direction) {
             case common.DIRECTION.UP:
-                newItem.y = newItem.y === 0?common.COLUMN_COUNT - 1:newItem.y - 1;
+                newItem.y = newItem.y === 0?this.state.columnCount - 1:newItem.y - 1;
                 break;
             case common.DIRECTION.DOWN:
-                newItem.y = newItem.y === common.COLUMN_COUNT - 1?0:newItem.y + 1;
+                newItem.y = newItem.y === this.state.columnCount - 1?0:newItem.y + 1;
                 break;
             case common.DIRECTION.LEFT:
-                newItem.x = newItem.x === 0?common.COLUMN_COUNT - 1:newItem.x - 1;
+                newItem.x = newItem.x === 0?this.state.columnCount - 1:newItem.x - 1;
                 break;
             case common.DIRECTION.RIGHT:
-                newItem.x = newItem.x === common.COLUMN_COUNT - 1?0:newItem.x + 1;
+                newItem.x = newItem.x === this.state.columnCount - 1?0:newItem.x + 1;
                 break;
             default:
                 break;
@@ -254,7 +238,7 @@ class Game extends React.Component {
                     break;
 
                 case common.CTYPE.FOOD_S_UP:
-                    speed -= speed>100?50:(speed>50?10:0);
+                    speed -= speed>100?40:(speed>50?10:0);
                     break;
 
                 default:
@@ -322,7 +306,6 @@ class Game extends React.Component {
         const flash = {x1, x2, y1, y2};
         this.flashCount = 0;
         this.flashtimer = setInterval(() => {
-            console.log(`flashtimer: ${JSON.stringify(flash)}`)
             if(this.flashCount > 3){
                 this.flashCount = 0;
                 clearInterval(this.flashtimer);
@@ -338,7 +321,7 @@ class Game extends React.Component {
                 }
                 this.flashCount++;
             }
-        }, 40);
+        }, 30);
         return this.state.others.filter( a => !(a.x >= x1 && a.x <= x2 && a.y >= y1 && a.y <= y2 && a.t === common.CTYPE.WALL)).slice();
         // return {'others':others, 'flash':flash};
     }
@@ -359,7 +342,29 @@ class Game extends React.Component {
         });
     }
     reset(){
+        this.stopGame();
         this.setState({...common.DEFAULT_STATE})
+    }
+
+    save(){
+        if(this.history){
+            this.stopGame();
+            navigator.clipboard.writeText(JSON.stringify(this.history[0]));
+            alert('history Json has been copied.');
+        }
+    }
+
+    load(evt){
+        let state = JSON.parse(evt.target.value);
+        state.started = false;
+        this.setState(state);
+    }
+
+    setProperty(name, value){
+        this.stopGame();
+        let tmp = {...common.DEFAULT_STATE};
+        tmp[name] = Number(value);
+        this.setState(tmp);
     }
 
     resetToHistory(){
@@ -370,7 +375,6 @@ class Game extends React.Component {
     }
 
     render() {
-        console.log(`${JSON.stringify(this.state)}`);
         return (
             <div className="game">
                 {/* <div>{JSON.stringify( this.state.snake.length)} - {this.state.status}</div>  */}
@@ -381,6 +385,8 @@ class Game extends React.Component {
                         others={this.state.others}
                         snake={this.state.snake}
                         flash={this.state.flash}
+                        direction={this.state.direction}
+                        columnCount={this.state.columnCount}
                     />
                 </div>
                 <div className="game-info">
@@ -388,13 +394,20 @@ class Game extends React.Component {
                     <div className='game-info2'>
                      SNAKE LENGTH: <span className='label-highlight'>{this.state.snake.length}</span>, 
                      FOOD COUNT:  <span className='label-highlight'>{this.state.foodCount}</span>,
-                     common.SPEED:  <span className='label-highlight'>{this.state.speed}</span>,
-                     SCORE: <span className='label-highlight'>{this.state.score}</span>
+                     SPEED:  <span className='label-highlight'>{this.state.speed}</span>,
+                     SCORE: <span className='label-highlight'>{this.state.score}</span>,
+                     {/* SIZE: <input value={this.state.columnCount} onChange={(evt) => this.setState(() => {return {columnCount:Number(evt.target.value)}})}></input> */}
+                     SIZE: <input className='input-property' value={this.state.columnCount} onChange={(evt) => this.setProperty('columnCount', evt.target.value)}></input>
+                     <input className="input-data" onChange={(evt) => this.load(evt)} placeholder="init state..."></input>
                      {/* dirPool: <span className='label-highlight'>{JSON.stringify(this.state.directionPool)}</span> */}
-                    <button className='game-info2' onClick={this.resumeGame.bind(this)} > start </button> 
+                     </div>
+                </div>
+                
+                <div className="game-info3">
+                    <button className='game-info2' onClick={this.swich.bind(this)} > {this.state.started?'stop':'start'} </button> 
                     <button className='game-info2' onClick={this.reset.bind(this)} > reset </button>
                     <button className='game-info2' onClick={this.resetToHistory.bind(this)} > history </button>
-                     </div>
+                    <button className='game-info2' onClick={this.save.bind(this)} > save </button>
                 </div>
             </div>
         );

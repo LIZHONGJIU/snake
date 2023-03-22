@@ -25,19 +25,20 @@ export default class Board extends React.Component {
             && y >= this.props.flash.y1 && y <= this.props.flash.y2){
                 flash = true;
         }
+
         return (
+            
             <Square
-                key={x * common.COLUMN_COUNT + y}
+                key={x * this.props.columnCount + y}
                 type={type}
                 flash={flash}
+                direction={this.props.direction}
             />
         );
     }
 
     render() {
-      
-        let count = Array.from(Array(common.COLUMN_COUNT), (_,x) => x);
-
+        let count = Array.from(Array(this.props.columnCount), (_,x) => x);
         return (
             <div>
                 {
@@ -47,8 +48,7 @@ export default class Board extends React.Component {
                       {count.map((_, idx2) => this.renderSquare(idx2, idx))}
                     </div>)
                     ;
-                  }
-                  )
+                  })
                 }
             </div>
         );

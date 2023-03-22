@@ -8,12 +8,21 @@ import common from "../common";
  * @returns 
  */
 export default function Square(props) {
+    // console.log("square :", props.key)
     let color = '';
     let text = '';
     let textColor = '';
+    let headerText = '→';
+    switch (props.direction) {
+        case common.DIRECTION.DOWN: headerText = '↓'; break;
+        case common.DIRECTION.UP: headerText = '↑'; break;
+        case common.DIRECTION.LEFT: headerText = '←'; break;
+        case common.DIRECTION.RIGHT: headerText = '→'; break;
+        default: break;
+    }
     switch (props.type) {
         case common.CTYPE.SNAKE: color = '#525252';break;
-        case common.CTYPE.SNAKE_HEADER: color = 'black';textColor = 'white';text = 'H';break;
+        case common.CTYPE.SNAKE_HEADER: color = 'black';textColor = 'white';text = headerText;break;
         case common.CTYPE.SNAKE_PREGNANT: color = 'black';break;
         case common.CTYPE.FUCKED_SNAKE: color = 'red';break;
         case common.CTYPE.WALL: color = 'blue';break;

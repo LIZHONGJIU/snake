@@ -47,6 +47,7 @@ body {
   }
   .game-board {
     width:60%;
+    padding-top:40px;
   }
   
   .game-info {
@@ -64,6 +65,23 @@ body {
     left: 5px;
   }
 
+  .game-info3 {
+    position:absolute;
+    top: 35px;
+    left:40px;
+    width: 80%;
+    padding: 3px;
+  }
   .label-highlight{
     color: red;
+  }
+
+  .input-data {
+    width: 50px;
+    border: 0px;
+  }
+  
+  .input-property {
+    width: 50px;
+    /* border: 0px; */
   }
