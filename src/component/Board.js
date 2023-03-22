@@ -44,7 +44,7 @@ export default class Board extends React.Component {
                 {
                   count.map((_, idx) => {
                     return (
-                    <div className="board-row">
+                    <div className="board-row" key={idx}>
                       {count.map((_, idx2) => this.renderSquare(idx2, idx))}
                     </div>)
                     ;

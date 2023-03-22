@@ -36,13 +36,13 @@ export default function Square(props) {
         }
     let style = color?{backgroundColor:color,opacity:1}:{};
     if(props.flash){
-        style = {backgroundColor:'blue',opacity:0.5}
+        style = {backgroundColor:'blue',opacity:0.2}
     }
     const style2 = textColor? {color:textColor}: {};
     // console.log(`Square ${JSON.stringify(style)}`);
     return (
-        <button className="square" onClick={props.onClick} style={style}>
+        <div className="square" onClick={props.onClick} style={style}>
             <span style={style2}>{text}</span>
-        </button>
+        </div>
     );
 }

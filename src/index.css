@@ -1,6 +1,7 @@
 body {
     font: 4px "Century Gothic", Futura, sans-serif;
     margin: 40px;
+    overflow: hidden;
   }
   
   ol, ul {
@@ -19,7 +20,7 @@ body {
   
   .square {
     background: #fff;
-    border: 1px solid #999;
+    border: 0.5px solid #999;
     /* border: 0px; */
     float: left;
     /* font-size: 18px; */
@@ -47,16 +48,9 @@ body {
   }
   .game-board {
     width:60%;
-    padding-top:40px;
+    padding-top:5px;
   }
   
-  .game-info {
-    position:absolute;
-    top: 10px;
-    left:40px;
-    width: 80%;
-    padding: 3px;
-  }
   
   .game-info2 {
     padding-left: 10px;
@@ -65,13 +59,6 @@ body {
     left: 5px;
   }
 
-  .game-info3 {
-    position:absolute;
-    top: 35px;
-    left:40px;
-    width: 80%;
-    padding: 3px;
-  }
   .label-highlight{
     color: red;
   }
